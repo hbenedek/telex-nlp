@@ -1,0 +1,36 @@
+name: CI
+
+on:
+  push:
+    branches: [master]
+  pull_request:
+    branches: [master]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v2
+      - name: Set up Python 3.10
+        uses: actions/setup-python@v2
+        with:
+          python-version: "3.10"
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip install pipenv
+          pipenv install --dev --system --deploy
+      - name: Check formatting
+        run: |
+          black --check .
+          isort --check --gitignore .
+      - name: Lint with Pylint
+        run: |
+          pylint telex-nlp
+      - name: Check doc style with pydocstyle
+        run: |
+          pydocstyle telex-nlp
+      - name: Check that all functions are type annotated
+        run: |
+          ! mypy telex-nlp --disallow-untyped-defs --disallow-incomplete-defs | grep "Function is missing" || false
