@@ -1,2 +1,4 @@
+"""Params file."""
+
 SEED = 42
-print(1)
+MAX_PAGES = 5292
