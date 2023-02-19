@@ -3,23 +3,24 @@ import json
 from datetime import datetime
 from pathlib import Path
 
-import pandas as pd
 import requests
 import tqdm
 import typer
 from bs4 import BeautifulSoup as BS
+from bs4.element import ResultSet
 
 from params import MAX_PAGES
 
 
-def get_soup(url) -> BS:
+def get_soup(url: str) -> BS:
     """Get soup from the web."""
-    response = requests.request("GET", url)
+    response = requests.request("GET", url, timeout=5)
     soup = BS(response.content, "html.parser")
     return soup
 
 
-def parse_date(raw):
+def parse_date(raw: str) -> datetime:
+    """Parse date from raw string."""
     months = {
         "január": "01",
         "február": "02",
@@ -40,11 +41,13 @@ def parse_date(raw):
     return datetime.strptime(date, "%Y. %m %d. – %H:%M")
 
 
-def parse_author(raw):
+def parse_author(raw: str) -> str:
+    """Parse author from raw string."""
     return raw.split("\n")[4].lstrip()
 
 
-def scrape_article_metadata(article, data):
+def scrape_article(article: ResultSet, data: dict) -> None:
+    """Scrape article text, metadata and append dictionary."""
     href = article.find("a", href=True)["href"]
     if not href[1:8] == "english":  # for now skipping english articles
         data["href"].append(href)
@@ -52,11 +55,11 @@ def scrape_article_metadata(article, data):
         raw = article.find(class_="article_date").text
         try:
             data["author"].append(parse_author(raw))
-        except:
+        except ValueError:
             data["author"].append("")
         try:
             data["date"].append(parse_date(raw))
-        except:
+        except ValueError:
             data["date"].append(raw)
     data["lead"].append(article.find("p", class_="list__item__lead hasHighlight").text)
 
@@ -64,29 +67,33 @@ def scrape_article_metadata(article, data):
     data["text"].append(text)
 
 
-def scrape_text(href):
+def scrape_text(href: str) -> str:
+    """Scrape article text."""
     soup2 = get_soup("https://telex.hu" + href)
     article = soup2.find("div", {"class": "article-html-content"})
     return article.text
 
 
 def scrape_archive_page(page: int) -> dict:
+    """Scrape archive page and return a dictionary with the scraped data."""
     url = f"https://telex.hu/archivum?oldal={page}"
     data = {"date": [], "author": [], "lead": [], "href": [], "language": [], "text": []}
 
     soup = get_soup(url)
     list_group = soup.find_all("div", {"class": "list__item__info"})
-    for i, article in enumerate(list_group):
-        scrape_article_metadata(article, data)
+    for article in list_group:
+        scrape_article(article, data)
     return data
 
 
-def save_json(data, output_folder: Path, page: int) -> None:
-    with open(output_folder / f"raw_archive_{page}.json", "w") as outfile:
+def save_json(data: dict, output_folder: Path, page: int) -> None:
+    """Save json file."""
+    with open(output_folder / f"raw_archive_{page}.json", "w", encoding="utf-8") as outfile:
         json.dump(data, outfile, default=str)
 
 
 def main(output_folder: Path = typer.Option(...)) -> None:
+    """Main function, scrape archive pages and save them as json files."""
     for page in tqdm.tqdm(range(MAX_PAGES)):
         archive_page = scrape_archive_page(page)
         save_json(archive_page, output_folder, page)
