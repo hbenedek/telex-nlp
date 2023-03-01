@@ -11,7 +11,11 @@ from params import MAX_PAGES, PER_PAGE, SLEEP_TIME
 
 def get_json(url: str) -> dict:
     """Get json content from web api."""
-    response = requests.request("GET", url, timeout=10)
+    headers = {
+        "Content-Type": "application/json;charset=UTF-8",
+        "User-Agent": "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko)",
+    }
+    response = requests.request("GET", url, timeout=10, headers=headers)
     return response.json()
 
 
@@ -32,14 +36,13 @@ def scrape_slugs() -> dict:
             slugs = [item["slug"] for item in soup["items"]]
             slugs_by_page[page] = slugs
             print(f"page {page} --- slugs {len(slugs)}")
-        except ValueError:
+        except ConnectionError:
             pass
     return slugs_by_page
 
 
-def scrape_articles(output_folder: Path) -> None:
+def scrape_articles(slugs_by_page: dict, output_folder: Path) -> None:
     """Scrape articles from the web."""
-    slugs_by_page = scrape_slugs()
     i = 0
     for page in range(MAX_PAGES):
         output = output_folder / str(page)
@@ -51,11 +54,10 @@ def scrape_articles(output_folder: Path) -> None:
                 save_json(article, output, slug)
                 print(f"page {page} --- article {i} --- slug {slug}")
                 i += 1
-            except ValueError:
+            except ConnectionError:
                 pass
 
 
-# TODO: refactor, first scrape all slugs, then scrape all articles
 def main(output_folder: Path = typer.Option(...)) -> None:
     """Scrape articles from the web."""
 
@@ -64,7 +66,7 @@ def main(output_folder: Path = typer.Option(...)) -> None:
     output.mkdir(parents=True, exist_ok=True)
     save_json(slugs_by_page, output, "slugs")
 
-    # scrape_articles(output_folder)
+    scrape_articles(slugs_by_page, output_folder)
 
 
 if __name__ == "__main__":
