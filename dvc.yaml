@@ -1,9 +1,9 @@
 stages:
   scrape:
-    cmd: python -m telex-nlp.pipeline.scrape.scraping
+    cmd: python -m telex.pipeline.scrape.scraping
       --output-folder "data/raw/raw"
     deps:
-      - telex-nlp/pipeline/scrape
+      - telex/pipeline/scrape
     outs:
       - data/raw
     params:

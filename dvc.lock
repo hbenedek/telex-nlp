@@ -1,1 +1,19 @@
 schema: '2.0'
+stages:
+  scrape:
+    cmd: python -m telex.pipeline.scrape.scraping --output-folder "data/raw/raw"
+    deps:
+    - path: telex/pipeline/scrape
+      md5: 7da4762f14f0811c50e13c610379d4c4.dir
+      size: 2265
+      nfiles: 2
+    params:
+      params.py:
+        MAX_PAGES: 187
+        PER_PAGE: 400
+        SLEEP_TIME: 0.5
+    outs:
+    - path: data/raw
+      md5: 170069251545593c2f2fd9f421249eeb.dir
+      size: 592970611
+      nfiles: 74711

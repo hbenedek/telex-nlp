@@ -1,0 +1,4 @@
+[core]
+    remote = myremote
+['remote "myremote"']
+    url = /Users/benedek.harsanyi/Documents/others/dvcremote
