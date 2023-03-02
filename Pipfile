@@ -26,6 +26,10 @@ numexpr = "*"
 bottleneck = "*"
 typer = "*"
 tqdm = "*"
+seaborn = "*"
+torch = "*"
+torchvision = "*"
+torchaudio = "*"
 
 [dev-packages]
 black = "*"
