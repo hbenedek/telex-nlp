@@ -1,5 +1,6 @@
 """Module for scraping articles from the web."""
 import json
+
 import time
 from pathlib import Path
 
@@ -67,6 +68,7 @@ def main(output_folder: Path = typer.Option(...)) -> None:
     save_json(slugs_by_page, output, "slugs")
 
     scrape_articles(slugs_by_page, output_folder)
+
 
 
 if __name__ == "__main__":
