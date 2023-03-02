@@ -17,3 +17,20 @@ stages:
       md5: 170069251545593c2f2fd9f421249eeb.dir
       size: 592970611
       nfiles: 74711
+  preprocess:
+    cmd: python -m telex.pipeline.preprocess.preprocessing --input-folder "data/raw/raw"
+      --output-folder "data/preprocessed"
+    deps:
+    - path: data/raw
+      md5: 170069251545593c2f2fd9f421249eeb.dir
+      size: 592970611
+      nfiles: 74711
+    - path: telex/pipeline/preprocess
+      md5: 68ddf686b26a16aac649f8e905483b3b.dir
+      size: 1883
+      nfiles: 2
+    outs:
+    - path: data/preprocessed
+      md5: 4c7d4461073c9b5b8cd526c4fada9878.dir
+      size: 288517245
+      nfiles: 1

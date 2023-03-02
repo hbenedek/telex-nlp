@@ -11,7 +11,15 @@ stages:
           - MAX_PAGES
           - PER_PAGE
           - SLEEP_TIME
-
+  preprocess:
+    cmd: python -m telex.pipeline.preprocess.preprocessing
+      --input-folder "data/raw/raw"
+      --output-folder "data/preprocessed"
+    deps:
+      - telex/pipeline/preprocess
+      - data/raw
+    outs:
+      - data/preprocessed
 
 #  preprocess:
 #    cmd: python -m telex-nlp.pipeline.preprocess.preprocessing
