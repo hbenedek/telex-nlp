@@ -1,6 +1,5 @@
-"""Module for scraping articles from the web."""
+"""Module for scraping articles from telex."""
 import json
-
 import time
 from pathlib import Path
 
@@ -8,9 +7,10 @@ import requests
 import typer
 
 from params import MAX_PAGES, PER_PAGE, SLEEP_TIME
+from telex.utils.io import save_json
 
 
-def get_json(url: str) -> dict:
+def get_request_as_json(url: str) -> dict:
     """Get json content from web api."""
     headers = {
         "Content-Type": "application/json;charset=UTF-8",
@@ -20,12 +20,6 @@ def get_json(url: str) -> dict:
     return response.json()
 
 
-def save_json(article: dict, output_folder: Path, slug: str) -> None:
-    """Save json file."""
-    with open(output_folder / f"{slug}.json", "w", encoding="utf-8") as outfile:
-        json.dump(article, outfile, default=str)
-
-
 def scrape_slugs() -> dict:
     """Scrape slugs from the web."""
     slugs_by_page = {}
@@ -33,7 +27,7 @@ def scrape_slugs() -> dict:
         try:
             api = f"https://telex.hu/api/search?oldal={page}&perPage={PER_PAGE}"
             time.sleep(SLEEP_TIME)
-            soup = get_json(api)
+            soup = get_request_as_json(api)
             slugs = [item["slug"] for item in soup["items"]]
             slugs_by_page[page] = slugs
             print(f"page {page} --- slugs {len(slugs)}")
@@ -51,7 +45,7 @@ def scrape_articles(slugs_by_page: dict, output_folder: Path) -> None:
         for slug in slugs_by_page[page]:
             try:
                 time.sleep(SLEEP_TIME)
-                article = get_json(f"https://telex.hu/api/articles/{slug}")
+                article = get_request_as_json(f"https://telex.hu/api/articles/{slug}")
                 save_json(article, output, slug)
                 print(f"page {page} --- article {i} --- slug {slug}")
                 i += 1
@@ -60,7 +54,7 @@ def scrape_articles(slugs_by_page: dict, output_folder: Path) -> None:
 
 
 def main(output_folder: Path = typer.Option(...)) -> None:
-    """Scrape articles from the web."""
+    """Scrape articles from telex and save them as json files."""
 
     slugs_by_page = scrape_slugs()
     output = output_folder / "slugs"
@@ -68,7 +62,6 @@ def main(output_folder: Path = typer.Option(...)) -> None:
     save_json(slugs_by_page, output, "slugs")
 
     scrape_articles(slugs_by_page, output_folder)
-
 
 
 if __name__ == "__main__":

@@ -1,4 +1,5 @@
 [core]
     remote = myremote
+    autostage = true
 ['remote "myremote"']
     url = /Users/benedek.harsanyi/Documents/others/dvcremote

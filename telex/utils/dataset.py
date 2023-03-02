@@ -31,10 +31,10 @@ class CharDataset(Dataset):
 
     def __getitem__(self, idx: int) -> torch.Tensor:
         word = self.text[idx]
-        ix = self.encode(word)
+        idx = self.encode(word)
         x = torch.zeros(self.max_word_length + 1, dtype=torch.long)
         y = torch.zeros(self.max_word_length + 1, dtype=torch.long)
         x[1 : 1 + len(idx)] = idx
-        y[: len(idx)] = ix
+        y[: len(idx)] = idx
         y[len(idx) + 1 :] = -1  # index -1 will mask the loss at the inactive locations
         return x, y
