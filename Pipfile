@@ -10,11 +10,11 @@ lint = """sh -c "
     && echo 'Running isort' \
     && isort --check --gitignore . \
     && echo 'Running pylint' \
-    && pylint {{ cookiecutter.package_name }} \
+    && pylint telex \
     && echo 'Running pydocstyle' \
-    && pydocstyle {{ cookiecutter.package_name }} \
+    && pydocstyle telex \
     && echo 'Running mypy' \
-    && ! mypy {{ cookiecutter.package_name }} --disallow-untyped-defs --disallow-incomplete-defs | grep 'Function is missing' || false
+    && ! mypy telex --disallow-untyped-defs --disallow-incomplete-defs | grep 'Function is missing' || false
 "
 """
 
@@ -25,6 +25,7 @@ pandas = "*"
 numexpr = "*"
 bottleneck = "*"
 typer = "*"
+tqdm = "*"
 
 [dev-packages]
 black = "*"
@@ -35,4 +36,4 @@ pylint = "*"
 mypy = "*"
 
 [requires]
-python_version = "3.10"
+python_version = "3.9"

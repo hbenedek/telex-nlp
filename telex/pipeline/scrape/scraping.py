@@ -1,102 +1,74 @@
 """Module for scraping articles from the web."""
 import json
-from datetime import datetime
+
+import time
 from pathlib import Path
 
 import requests
-import tqdm
 import typer
-from bs4 import BeautifulSoup as BS
-from bs4.element import ResultSet
 
-from params import MAX_PAGES
+from params import MAX_PAGES, PER_PAGE, SLEEP_TIME
 
 
-def get_soup(url: str) -> BS:
-    """Get soup from the web."""
-    response = requests.request("GET", url, timeout=5)
-    soup = BS(response.content, "html.parser")
-    return soup
-
-
-def parse_date(raw: str) -> datetime:
-    """Parse date from raw string."""
-    months = {
-        "január": "01",
-        "február": "02",
-        "március": "03",
-        "április": "04",
-        "május": "05",
-        "június": "06",
-        "július": "07",
-        "augusztus": "08",
-        "szeptember": "09",
-        "október": "10",
-        "november": "11",
-        "december": "12",
+def get_json(url: str) -> dict:
+    """Get json content from web api."""
+    headers = {
+        "Content-Type": "application/json;charset=UTF-8",
+        "User-Agent": "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko)",
     }
-    splitted = raw.split("\n")[1].lstrip().split(" ")
-    splitted[1] = months[splitted[1]]
-    date = " ".join(splitted)
-    return datetime.strptime(date, "%Y. %m %d. – %H:%M")
+    response = requests.request("GET", url, timeout=10, headers=headers)
+    return response.json()
 
 
-def parse_author(raw: str) -> str:
-    """Parse author from raw string."""
-    return raw.split("\n")[4].lstrip()
-
-
-def scrape_article(article: ResultSet, data: dict) -> None:
-    """Scrape article text, metadata and append dictionary."""
-    href = article.find("a", href=True)["href"]
-    if not href[1:8] == "english":  # for now skipping english articles
-        data["href"].append(href)
-        data["language"].append("hu")
-        raw = article.find(class_="article_date").text
-        try:
-            data["author"].append(parse_author(raw))
-        except ValueError:
-            data["author"].append("")
-        try:
-            data["date"].append(parse_date(raw))
-        except ValueError:
-            data["date"].append(raw)
-    data["lead"].append(article.find("p", class_="list__item__lead hasHighlight").text)
-
-    text = scrape_text(href)
-    data["text"].append(text)
-
-
-def scrape_text(href: str) -> str:
-    """Scrape article text."""
-    soup2 = get_soup("https://telex.hu" + href)
-    article = soup2.find("div", {"class": "article-html-content"})
-    return article.text
-
-
-def scrape_archive_page(page: int) -> dict:
-    """Scrape archive page and return a dictionary with the scraped data."""
-    url = f"https://telex.hu/archivum?oldal={page}"
-    data = {"date": [], "author": [], "lead": [], "href": [], "language": [], "text": []}
-
-    soup = get_soup(url)
-    list_group = soup.find_all("div", {"class": "list__item__info"})
-    for article in list_group:
-        scrape_article(article, data)
-    return data
-
-
-def save_json(data: dict, output_folder: Path, page: int) -> None:
+def save_json(article: dict, output_folder: Path, slug: str) -> None:
     """Save json file."""
-    with open(output_folder / f"raw_archive_{page}.json", "w", encoding="utf-8") as outfile:
-        json.dump(data, outfile, default=str)
+    with open(output_folder / f"{slug}.json", "w", encoding="utf-8") as outfile:
+        json.dump(article, outfile, default=str)
+
+
+def scrape_slugs() -> dict:
+    """Scrape slugs from the web."""
+    slugs_by_page = {}
+    for page in range(MAX_PAGES):
+        try:
+            api = f"https://telex.hu/api/search?oldal={page}&perPage={PER_PAGE}"
+            time.sleep(SLEEP_TIME)
+            soup = get_json(api)
+            slugs = [item["slug"] for item in soup["items"]]
+            slugs_by_page[page] = slugs
+            print(f"page {page} --- slugs {len(slugs)}")
+        except ConnectionError:
+            pass
+    return slugs_by_page
+
+
+def scrape_articles(slugs_by_page: dict, output_folder: Path) -> None:
+    """Scrape articles from the web."""
+    i = 0
+    for page in range(MAX_PAGES):
+        output = output_folder / str(page)
+        output.mkdir(parents=True, exist_ok=True)
+        for slug in slugs_by_page[page]:
+            try:
+                time.sleep(SLEEP_TIME)
+                article = get_json(f"https://telex.hu/api/articles/{slug}")
+                save_json(article, output, slug)
+                print(f"page {page} --- article {i} --- slug {slug}")
+                i += 1
+            except ConnectionError:
+                pass
 
 
 def main(output_folder: Path = typer.Option(...)) -> None:
-    """Main function, scrape archive pages and save them as json files."""
-    for page in tqdm.tqdm(range(MAX_PAGES)):
-        archive_page = scrape_archive_page(page)
-        save_json(archive_page, output_folder, page)
+    """Scrape articles from the web."""
+
+    slugs_by_page = scrape_slugs()
+    output = output_folder / "slugs"
+    output.mkdir(parents=True, exist_ok=True)
+    save_json(slugs_by_page, output, "slugs")
+
+    scrape_articles(slugs_by_page, output_folder)
+
 
 
 if __name__ == "__main__":
