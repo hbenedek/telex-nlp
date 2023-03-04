@@ -8,16 +8,22 @@ import pandas as pd
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
+from torch.optim import AdamW
 from torch.utils.data import DataLoader
+
+from params import STEPS
 
 
 class BaseModel(ABC, nn.Module):
     """Base class for all models."""
 
-    def __init__(self, save_dir: Path) -> None:
+    def __init__(self, save_dir: Path, block_size: int) -> None:
         super().__init__()
         self.save_dir = save_dir
+        self.block_size = block_size
+        self.optimizer = None  # initialize in subclass
         self.device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+        self.losses = []
 
     @torch.no_grad()
     def generate(
@@ -49,7 +55,8 @@ class BaseModel(ABC, nn.Module):
 
     def save(self) -> None:
         """Save the model to `save_path` directory."""
-        torch.save(self.state_dict(), self.save_dir)
+        output_file = self.save_dir / "model.pt"
+        torch.save(self.state_dict(), output_file)
 
     @classmethod
     def create_for_training(cls, save_dir: Path, model_kwargs: Optional[dict] = None) -> BaseModel:
@@ -62,16 +69,24 @@ class BaseModel(ABC, nn.Module):
         model.load_state_dict(torch.load(model_dir))
         return model
 
-    def train(self, loader: DataLoader) -> None:
-        for batch in loader:
-            batch = [char.to(self.device) for char in batch]
-            X, Y = batch
-            logits, loss = self.forward(X, Y)
-            self.losses.append(loss.item())
+    def train(self, loader: DataLoader, num_epochs: int) -> None:
+        for epoch in range(num_epochs):
+            for i, batch in enumerate(loader):
+                batch = [char.to(self.device) for char in batch]
+                X, Y = batch
+                logits, loss = self.forward(X, Y)
+                self.losses.append(loss.item())
+                loss.backward()
+                self.optimizer.step()
+                self.optimizer.zero_grad()
+                if i % 100 == 0:
+                    print(i, "batch", loss.item())
+                if i > STEPS:
+                    break
 
-            loss.backward()
-            self.optimizer.step()
-            self.optimizer.zero_grad()
+            avg_loss = sum(self.losses) / len(self.losses)
+            print(f"Epoch {epoch + 1} loss: {avg_loss:.4f}")
+            self.losses = []
 
     @abstractmethod
     def forward(self, idx: torch.Tensor, targets: Optional[torch.Tensor] = None) -> torch.Tensor:

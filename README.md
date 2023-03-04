@@ -1,5 +1,4 @@
 # telex-nlp
-
 In this project, I attempt to build a small language model, trained on all the articles of the Hungarian news portal [telex.hu](https://telex.hu/), using a character-based tokenizer.
 
 
@@ -45,4 +44,4 @@ The ML pipeline is managed with [DVC](https://dvc.org/), here are a few tips on 
     └── utils               <- helper scripts
         ├── dataset.py      <- defines pytorch Dataset object from raw articles
         └── io.py           <- input/output related functions
-</pre>
+
