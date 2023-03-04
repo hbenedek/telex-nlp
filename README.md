@@ -44,4 +44,4 @@ The ML pipeline is managed with [DVC](https://dvc.org/), here are a few tips on 
     └── utils               <- helper scripts
         ├── dataset.py      <- defines pytorch Dataset object from raw articles
         └── io.py           <- input/output related functions
-</pre>
+
