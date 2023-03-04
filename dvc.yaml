@@ -20,6 +20,22 @@ stages:
       - data/raw
     outs:
       - data/preprocessed
+  train:
+    cmd: python -m telex.pipeline.train.training
+      --input-file "data/preprocessed/telex.json"
+      --output-folder "data/models"
+    deps:
+      - telex/pipeline/train
+      - data/preprocessed
+    outs:
+      - data/models
+    params:
+      - params.py:
+          - SEED
+          - BATCH_SIZE
+          - BLOCK_SIZE
+          - VOCAB
+
 
 #  preprocess:
 #    cmd: python -m telex-nlp.pipeline.preprocess.preprocessing

@@ -34,3 +34,27 @@ stages:
       md5: 4c7d4461073c9b5b8cd526c4fada9878.dir
       size: 288517245
       nfiles: 1
+  train:
+    cmd: python -m telex.pipeline.train.training --input-file "data/preprocessed/telex.json"
+      --output-folder "data/models"
+    deps:
+    - path: data/preprocessed
+      md5: 4c7d4461073c9b5b8cd526c4fada9878.dir
+      size: 288517245
+      nfiles: 1
+    - path: telex/pipeline/train
+      md5: 22fff41c3853f14bf776224c6b5308fb.dir
+      size: 1182
+      nfiles: 2
+    params:
+      params.py:
+        BATCH_SIZE: 32
+        BLOCK_SIZE: 20
+        SEED: 42
+        VOCAB: "AÁBCDEÉFGHIÍJKLMNOÓÖŐPQRSTUÚÜŰVWXYZaábcdeéfghiíjklmnoóöőpqrstuúüűvwxyz0123456789.,;:?!-–_()[]{}'\"\
+          /\\@#$%^&*+=|~` "
+    outs:
+    - path: data/models
+      md5: 70fd19b9b90ac23512f9f5236b3491ec.dir
+      size: 51941
+      nfiles: 1
