@@ -11,7 +11,7 @@ import torch.nn.functional as F
 from torch.optim import AdamW
 from torch.utils.data import DataLoader
 
-from params import STEPS
+from params import TrainingParams
 
 
 class BaseModel(ABC, nn.Module):
@@ -23,7 +23,10 @@ class BaseModel(ABC, nn.Module):
         self.block_size = block_size
         self.optimizer = None  # initialize in subclass
         self.device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-        self.losses = []
+        self.batch_train_losses = []
+        self.batch_val_losses = []
+        self.epoch_train_losses = []
+        self.epoch_val_losses = []
 
     @torch.no_grad()
     def generate(
@@ -40,7 +43,7 @@ class BaseModel(ABC, nn.Module):
             # forward the model to get the logits for the index in the sequence
             logits, _ = self.forward(idx_cond)
             # pluck the logits at the final step and scale by desired temperature
-            logits = logits[:, -1, :] / temperature
+            logits = logits[:, -1, :]
             # apply softmax to convert logits to (normalized) probabilities
             probs = F.softmax(logits, dim=-1)
             # either sample from the distribution or take the most likely element
@@ -69,24 +72,42 @@ class BaseModel(ABC, nn.Module):
         model.load_state_dict(torch.load(model_dir))
         return model
 
-    def train(self, loader: DataLoader, num_epochs: int) -> None:
+    def trainer(self, train_loader: DataLoader, val_loader: DataLoader, num_epochs: int) -> None:
         for epoch in range(num_epochs):
-            for i, batch in enumerate(loader):
+            self.batch_train_losses = []
+            self.epoch_val_losses = []
+
+            self.train()
+            for i, batch in enumerate(train_loader):
                 batch = [char.to(self.device) for char in batch]
                 X, Y = batch
                 logits, loss = self.forward(X, Y)
-                self.losses.append(loss.item())
+                self.batch_train_losses.append(loss.item())
                 loss.backward()
                 self.optimizer.step()
                 self.optimizer.zero_grad()
                 if i % 100 == 0:
                     print(i, "batch", loss.item())
-                if i > STEPS:
+                if i > TrainingParams.STEPS:
                     break
 
-            avg_loss = sum(self.losses) / len(self.losses)
-            print(f"Epoch {epoch + 1} loss: {avg_loss:.4f}")
-            self.losses = []
+            epoch_train_loss = sum(self.batch_train_losses) / len(self.batch_train_losses)
+            self.epoch_train_losses.append(epoch_train_loss)
+
+            self.eval()
+            for j, batch in enumerate(val_loader):
+                batch = [char.to(self.device) for char in batch]
+                X, Y = batch
+                logits, loss = self.forward(X, Y)
+                self.batch_val_losses.append(loss.item())
+                if j % 100 == 0:
+                    print(j, "batch", loss.item())
+                if j > TrainingParams.STEPS:
+                    break
+
+            epoch_val_loss = sum(self.batch_val_losses) / len(self.batch_val_losses)
+            self.epoch_val_losses.append(epoch_val_loss)
+            print(f"Epoch {epoch + 1} train_loss: {epoch_train_loss:.4f} val_loss: {epoch_val_loss:.4f}")
 
     @abstractmethod
     def forward(self, idx: torch.Tensor, targets: Optional[torch.Tensor] = None) -> torch.Tensor:

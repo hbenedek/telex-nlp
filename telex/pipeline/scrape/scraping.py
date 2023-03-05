@@ -6,7 +6,7 @@ from pathlib import Path
 import requests
 import typer
 
-from params import MAX_PAGES, PER_PAGE, SLEEP_TIME
+from params import ScrapeParams
 from telex.utils.io import save_json
 
 
@@ -23,10 +23,10 @@ def get_request_as_json(url: str) -> dict:
 def scrape_slugs() -> dict:
     """Scrape slugs from the web."""
     slugs_by_page = {}
-    for page in range(MAX_PAGES):
+    for page in range(ScrapeParams.MAX_PAGES):
         try:
-            api = f"https://telex.hu/api/search?oldal={page}&perPage={PER_PAGE}"
-            time.sleep(SLEEP_TIME)
+            api = f"https://telex.hu/api/search?oldal={page}&perPage={ScrapeParams.PER_PAGE}"
+            time.sleep(ScrapeParams.SLEEP_TIME)
             soup = get_request_as_json(api)
             slugs = [item["slug"] for item in soup["items"]]
             slugs_by_page[page] = slugs
@@ -39,12 +39,12 @@ def scrape_slugs() -> dict:
 def scrape_articles(slugs_by_page: dict, output_folder: Path) -> None:
     """Scrape articles from the web."""
     i = 0
-    for page in range(MAX_PAGES):
+    for page in range(ScrapeParams.MAX_PAGES):
         output = output_folder / str(page)
         output.mkdir(parents=True, exist_ok=True)
         for slug in slugs_by_page[page]:
             try:
-                time.sleep(SLEEP_TIME)
+                time.sleep(ScrapeParams.SLEEP_TIME)
                 article = get_request_as_json(f"https://telex.hu/api/articles/{slug}")
                 save_json(article, output, slug)
                 print(f"page {page} --- article {i} --- slug {slug}")

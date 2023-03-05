@@ -31,11 +31,17 @@ stages:
       - data/models
     params:
       - params.py:
-          - SEED
-          - BATCH_SIZE
-          - BLOCK_SIZE
+          - MODEL
           - VOCAB
-
+          - BigramParams
+          - TrainingParams
+          - TransformerParams
+  evaluate:
+    cmd: python -m telex.pipeline.evaluate.evaluation
+      --model-file "data/models/model.pt"
+    deps:
+      - telex/pipeline/evaluate
+      - data/models
 
 #  preprocess:
 #    cmd: python -m telex-nlp.pipeline.preprocess.preprocessing

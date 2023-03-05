@@ -43,18 +43,36 @@ stages:
       size: 288517245
       nfiles: 1
     - path: telex/pipeline/train
-      md5: 22fff41c3853f14bf776224c6b5308fb.dir
-      size: 1182
+      md5: cfa4c55926d00d6ad8d680f142c83c08.dir
+      size: 1769
       nfiles: 2
     params:
       params.py:
-        BATCH_SIZE: 32
-        BLOCK_SIZE: 20
-        SEED: 42
+        BigramParams:
+          MODEL: bigram
+        MODEL: transformer
+        TrainingParams:
+          SEED: 42
+          LR: 0.001
+          SPLIT:
+          - 0.9
+          - 0.05
+          - 0.05
+          BLOCK_SIZE: 100
+          BATCH_SIZE: 64
+          EPOCHS: 1
+          STEPS: 5000
+        TransformerParams:
+          MODEL: transformer
+          D_MODEL: 120
+          HEADS: 6
+          D_FF: 512
+          DROPOUT: 0.1
+          NUM_LAYERS: 2
         VOCAB: "AÁBCDEÉFGHIÍJKLMNOÓÖŐPQRSTUÚÜŰVWXYZaábcdeéfghiíjklmnoóöőpqrstuúüűvwxyz0123456789.,;:?!-–_()[]{}'\"\
           /\\@#$%^&*+=|~` "
     outs:
     - path: data/models
-      md5: 70fd19b9b90ac23512f9f5236b3491ec.dir
-      size: 51941
+      md5: c70961aae9d65e913b3bc57c689df1a5.dir
+      size: 2111358
       nfiles: 1

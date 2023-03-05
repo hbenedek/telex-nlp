@@ -9,7 +9,6 @@ import typer
 from telex.utils.io import load_json, save_json
 
 
-# TODO: make it look like the SZTAKI dataset and use polars, and check andrej's preprocessing
 def get_attributes(article: dict) -> str:
     """Get text from article."""
     return article["id"], article["type"], article["title"], article["content"], article["slug"], article["pubDate"]
