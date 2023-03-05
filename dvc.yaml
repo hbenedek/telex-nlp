@@ -39,36 +39,15 @@ stages:
   evaluate:
     cmd: python -m telex.pipeline.evaluate.evaluation
       --model-file "data/models/model.pt"
+      --input-file "data/preprocessed/telex.json"
     deps:
       - telex/pipeline/evaluate
       - data/models
-
-#  preprocess:
-#    cmd: python -m telex-nlp.pipeline.preprocess.preprocessing
-#      --output-file "data/preprocessed/preprocessed.txt"
-#    deps:
-#      - telex-nlp/pipeline/preprocess
-#    outs:
-#      - data/preprocessed
-#
-#  train:
-#    cmd: python -m telex-nlp.pipeline.train.training
-#      --preprocessed-file "data/preprocessed/preprocessed.txt"
-#      --output-file "data/models/model.txt"
-#    deps:
-#      - data/preprocessed
-#      - telex-nlp/pipeline/train
-#    outs:
-#      - data/models
-#    params:
-#      - params.py:
-#          - SEED
-#
-#  evaluate:
-#    cmd: python -m telex-nlp.pipeline.evaluate.evaluation
-#      --model-file "data/models/model.txt"
-#    deps:
-#      - data/models
-#      - telex-nlp/pipeline/evaluate
-
-
+      - data/preprocessed
+    params:
+      - params.py:
+          - MODEL
+          - VOCAB
+          - BigramParams
+          - TrainingParams
+          - TransformerParams
