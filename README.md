@@ -16,6 +16,11 @@ The ML pipeline is managed with [DVC](https://dvc.org/), here are a few tips on 
 - Run the complete pipeline: `dvc repro`
 - Run a specific step of the pipeline with all its dependencies: `dvc repro <step_name>`
 
+DVC Sages:
+- scrape        : using the telex api downloads and saves all articles published since 2020 october
+- prerpocess    : removes html, tags, and collects all article contents in a single json
+- train         : Dataloader and LM model is initialized, training on characterwise in semi-supervised fashion
+- evaluate      : calculates corpus perplexity on a test set, generates random text from input context
 
 # Structure
 <pre>
