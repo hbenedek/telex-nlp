@@ -1,15 +1,15 @@
-# telex-nlp
+# 📜 telex-nlp
 In this project, I attempt to build a small language model, trained on all the articles of the Hungarian news portal [telex.hu](https://telex.hu/), using a character-based tokenizer.
 
 
-# Set up environment
+## 🔧 Set up environment
 The python environment is managed with [pipenv](https://pipenv.pypa.io/en/latest/install). You can set up your environment with the following steps:
 
 - Run `pipenv lock`to generate the `Pipfile.lock` which lists the version of your python packages.
 - Run `pipenv install --dev` to actually create a virtual environment and install the python packages. The flag `--dev` allows to install the development packages (for linting, ...).
 - Run `pipenv shell` to activate the virtual environment
 
-# Run the DVC pipeline
+## 🚀 Run the DVC pipeline
 
 The ML pipeline is managed with [DVC](https://dvc.org/), here are a few tips on how to use it:
 
@@ -22,7 +22,7 @@ DVC Sages:
 - train         : Dataloader and LM model is initialized, training on characterwise in semi-supervised fashion
 - evaluate      : calculates corpus perplexity on a test set, generates random text from input context
 
-# Structure
+## 🏗️ Structure
 <pre>
 .
 ├── Pipfile                 <- requirements for running the project
